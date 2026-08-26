@@ -1,0 +1,1967 @@
+/* ============================================
+   TEMPLATE HOTELLERIE v5.0.17
+   Design System Chime — construit FROM SCRATCH (8th template)
+   ----------------------------------------------------
+   IMPORTANT (Piège #0 / #8) :
+   Ce :root contient UNIQUEMENT des couleurs NEUTRES par défaut
+   (bleu marine / gris / rouge corail). Les couleurs métier
+   (secteur client hotellerie : teal #0D6B6E / gold #C9A96E / coral #E67E53)
+   sont injectées DYNAMIQUEMENT par artisan.py via {{ palette_css }}
+   qui crée un <style id="palette-client">:root{...}</style> AVANT </head>.
+
+   AUCUNE couleur sectorielle n'est hardcodée ici. Le template est
+   sectoriellement AGNOSTIQUE au niveau CSS.
+
+   Construit à partir d'une page blanche — pas de copie des précédents
+   templates. Inspiré par les PATTERNS Chime (premium-card, sticky
+   stacking mobile 6 fixes, glassmorphism, blobs, tilt-card, carousel,
+   glass-card, pulse-ring, bento-grid, hero parallax, mockup 3D, modal
+   premium) mais code réécrit entièrement.
+
+   3 BUGS CRITIQUES À ÉVITER (v5.0.17) :
+   - Bug #1 : .reveal opacity:1 par défaut (PAS opacity:0)
+   - Bug #2 : sticky-cta MOBILE ONLY (max-width:768px)
+   - Bug #3 : PAS de {% if %} englobant une section entière
+   ============================================ */
+
+/* NOTE : ne PAS ajouter @import url(Google Fonts) ici.
+   Les polices sont chargées dynamiquement par {{ google_fonts_url }}
+   dans le <head> de chaque page HTML (Piège #8). */
+
+:root {
+    /* Chime design tokens — valeurs NEUTRES par défaut */
+    --primaire: #2C3E50;        /* bleu marine neutre */
+    --secondaire: #3498DB;      /* bleu clair neutre */
+    --accent: #E74C3C;          /* rouge corail neutre */
+    --fond-clair: #F8F9FA;      /* gris très clair */
+    --fond-moyen: #E9ECEF;      /* gris clair */
+    --fond-fonce: #1A1A1A;      /* presque noir */
+    --blanc: #FFFFFF;
+    --whatsapp: #25D366;
+    --telegram: #0088CC;
+
+    /* Typographie — fallback générique */
+    --police-titres: 'Playfair Display', Georgia, serif;
+    --police-corps: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --police-signature: 'Cormorant Garamond', Georgia, serif;
+
+    /* Chime naming */
+    --arrondi-carte: 28px;
+    --arrondi-bouton: 50px;
+    --arrondi-bloc: 12px;
+    --arrondi-input: 8px;
+    --container-max: 1200px;
+    --section-padding: 4rem 0;
+    --gutter: 1.5rem;
+
+    /* Alias backward-compat */
+    --arrondi: var(--arrondi-bloc);
+    --arrondi-card: var(--arrondi-carte);
+    --arrondi-btn: var(--arrondi-bouton);
+    --maxw: var(--container-max);
+
+    /* Shadows + tokens */
+    --shadow: 0 2px 16px rgba(0,0,0,.06);
+    --shadow-hover: 0 20px 60px rgba(0,0,0,.15);
+    --text-muted: #6e6e6e;
+    --text-primary: var(--fond-fonce);
+    --bg: #ffffff;
+    --transition: 0.3s ease;
+    --gris: #6e6e6e;
+
+    /* Étoiles avis */
+    --stars: #FFB400;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+/* v5.2 (MOB-01) : filet de sécurité anti-débordement horizontal — `clip` (et non
+   `hidden`) ne crée pas de conteneur de scroll et préserve position:sticky. */
+html,body{overflow-x:clip}
+body{
+    font-family:var(--police-corps);
+    font-size:16px;
+    line-height:1.7;
+    color:var(--text-primary);
+    background:var(--bg);
+    overflow-x:hidden;
+    position:relative;
+}
+
+/* ============================================
+   SIGNATURE CHIME #3 — BLOBS ANIMÉS (background)
+   ============================================ */
+body::before, body::after{
+    content:'';
+    position:fixed;
+    width:600px;
+    height:600px;
+    border-radius:50%;
+    filter:blur(100px);
+    opacity:0.15;
+    pointer-events:none;
+    z-index:0;
+    animation:float-blobs 25s ease-in-out infinite;
+}
+body::before{
+    background:var(--accent);
+    top:-200px;
+    left:-200px;
+}
+body::after{
+    background:var(--secondaire);
+    bottom:-200px;
+    right:-200px;
+    animation-delay:-12s;
+}
+@keyframes float-blobs{
+    0%,100%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(80px,40px) scale(1.1)}
+    66%{transform:translate(-50px,80px) scale(0.9)}
+}
+
+header,main,footer,.trust-bar,.sticky-cta,.wa-float,.tg-float,.toast,.lightbox,.sticky-mobile-bar,.booking-bar{position:relative;z-index:1}
+
+img{max-width:100%;height:auto;display:block}
+a{text-decoration:none;color:inherit}
+ul{list-style:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+input,select,textarea{
+    font-family:inherit;font-size:inherit;width:100%;
+    padding:.8rem 1rem;border:2px solid var(--fond-moyen);
+    border-radius:var(--arrondi-input);transition:border-color var(--transition);
+    background:var(--blanc);color:var(--text-primary);
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+label{display:block;margin-bottom:.4rem;font-weight:500;font-size:.9rem;color:var(--text-primary)}
+
+/* ============================================
+   ACCESSIBILITÉ WCAG 2.1 AA
+   ============================================ */
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--accent);color:#fff;padding:.6rem 1rem;z-index:9999;border-radius:0 0 6px 0;font-weight:600}
+.skip-link:focus{left:0}
+
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible,[role="button"]:focus-visible{
+    outline:3px solid var(--accent);
+    outline-offset:2px;
+}
+
+.sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+@media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto!important}
+    *,*::before,*::after{
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+    .reveal{opacity:1!important;transform:none!important}
+    .cursor{display:none!important}
+    .wa-float::before,.tg-float::before,.pulse-ring::after{display:none!important}
+    body::before,body::after{display:none!important}
+    .scroll-indicator{display:none!important}
+    .modal-premium,.modal-premium__icon,.modal-backdrop{transition:none;animation:none}
+    .carousel-track[data-autoscroll="true"]{animation:none!important}
+    .hero-hotellerie__bg{transform:none!important}
+}
+
+/* ============================================
+   BUG #1 (CRITIQUE) — REVEAL ON SCROLL
+   .reveal doit avoir opacity:1;transform:none PAR DÉFAUT
+   pour éviter le contenu invisible si JS échoue.
+   .reveal--pending est ajouté par JS AVANT observation.
+   ============================================ */
+.reveal{opacity:1;transform:none;transition:opacity .8s ease,transform .8s ease}
+.reveal.reveal--pending{opacity:0;transform:translateY(30px)}
+.reveal.reveal--pending.is-visible{opacity:1;transform:none}
+
+/* ============================================
+   CONTAINER + SECTIONS
+   ============================================ */
+.container{max-width:var(--container-max);margin:0 auto;padding:0 var(--gutter);position:relative}
+.container--narrow{max-width:760px}
+.container--wide{max-width:1400px}
+
+.section{padding:var(--section-padding)}
+.section--alt{background:var(--fond-clair)}
+.section--dark{background:var(--fond-fonce);color:#fff}
+.section--dark .section-title{color:#fff}
+.section--dark .section-subtitle{color:rgba(255,255,255,.7)}
+.section-title{text-align:center;font-family:var(--police-titres);font-size:clamp(1.6rem,4vw,2.3rem);color:var(--primaire);margin-bottom:2.5rem}
+.section-title::after{content:'';display:block;width:50px;height:3px;background:var(--accent);margin:.8rem auto 0;border-radius:2px}
+.section-subtitle{text-align:center;color:var(--text-muted);max-width:640px;margin:-1.5rem auto 2.5rem;font-size:1rem;line-height:1.6}
+
+/* ============================================
+   TRUST BAR
+   ============================================ */
+.trust-bar{background:var(--fond-fonce);color:#fff;padding:.6rem 1rem;text-align:center;font-size:.85rem}
+.trust-bar__stars{color:var(--stars);letter-spacing:1px;margin-right:.3rem}
+.trust-bar strong{color:var(--secondaire)}
+.trust-bar .sep{margin:0 .8rem;opacity:.5}
+
+/* ============================================
+   HEADER — Glassmorphism (signature Chime #2)
+   ============================================ */
+.header{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.9);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(0,0,0,.06);transition:padding var(--transition),box-shadow var(--transition)}
+.header.scrolled{padding:.3rem 0;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.nav{display:flex;justify-content:space-between;align-items:center;height:64px;gap:1rem}
+/* v5.2 (MOB-01) : le brand doit pouvoir rétrécir (ellipsis) — un nom long
+   ("Hôtel Les Manguiers Yamoussoukro") avec flex-shrink:0 débordait du viewport
+   mobile et poussait les éléments fixed hors écran (bulle chatbot invisible). */
+.nav__brand{font-family:var(--police-titres);font-size:1.3rem;font-weight:700;color:var(--primaire);min-width:0;flex-shrink:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav__brand img{max-height:40px;width:auto}
+.nav__menu{display:flex;gap:.3rem;align-items:center}
+.nav__menu a{padding:.5rem .85rem;border-radius:6px;font-weight:500;font-size:.9rem;transition:var(--transition);color:var(--text-primary)}
+.nav__menu a:hover,.nav__menu a.nav--active{color:var(--accent);background:var(--fond-clair)}
+.nav__menu a[aria-current="page"]{color:var(--accent);background:var(--fond-clair)}
+.nav__actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.nav__phone{
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.5rem 1rem;background:var(--accent);color:#fff;
+    border-radius:var(--arrondi-bouton);font-weight:600;font-size:.85rem;
+    transition:var(--transition);min-height:40px;
+}
+.nav__phone:hover{background:var(--primaire);transform:translateY(-2px)}
+.nav__phone i{font-size:.95rem}
+/* v5.2.2 (NAV-WA) : bouton WhatsApp FIXE dans le menu, à côté du bouton d'appel.
+   Remplace l'ancien bouton flottant .wa-float (supprimé) — un seul bouton
+   flottant désormais : le chatbot. */
+.nav__wa{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--whatsapp,#25D366);color:#fff;
+    font-size:1.15rem;flex-shrink:0;
+    box-shadow:0 3px 10px rgba(37,211,102,.35);
+    transition:var(--transition);
+}
+.nav__wa:hover{transform:scale(1.1);box-shadow:0 5px 16px rgba(37,211,102,.5);color:#fff}
+.nav__toggle{
+    display:none;
+    font-size:1.5rem;color:var(--primaire);
+    min-width:44px;min-height:44px;padding:.5rem;
+    border-radius:6px;align-items:center;justify-content:center;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+    padding:.85rem 1.6rem;border-radius:var(--arrondi-bouton);
+    font-weight:600;font-size:.95rem;text-decoration:none;
+    cursor:pointer;transition:var(--transition);min-height:44px;
+    border:2px solid transparent;text-align:center;
+}
+.btn--primaire{background:var(--primaire);color:#fff}
+.btn--primaire:hover{background:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(231,76,60,.3)}
+.btn--secondaire{background:var(--accent);color:#fff}
+.btn--secondaire:hover{background:var(--primaire);transform:translateY(-2px)}
+.btn--outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.btn--outline:hover{background:#fff;color:var(--primaire);border-color:#fff}
+.btn--outline-dark{background:transparent;color:var(--primaire);border-color:var(--primaire)}
+.btn--outline-dark:hover{background:var(--primaire);color:#fff}
+.btn--whatsapp{background:var(--whatsapp);color:#fff}
+.btn--whatsapp:hover{background:#1ea453;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,.3)}
+.btn--block{display:flex;width:100%}
+.btn--small{padding:.5rem 1rem;font-size:.82rem;min-height:36px}
+.btn--large{padding:1rem 2.2rem;font-size:1.05rem;min-height:52px}
+
+/* ============================================
+   SIGNATURE CHIME #1 — PREMIUM CARD
+   ============================================ */
+.premium-card{
+    position:relative;background:var(--blanc);
+    border-radius:var(--arrondi-carte);
+    box-shadow:var(--shadow);
+    overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);
+    isolation:isolate;height:100%;display:flex;flex-direction:column;
+}
+.premium-card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(231,76,60,.08),transparent 60%);
+    opacity:0;transition:opacity .3s;z-index:0;pointer-events:none;
+}
+.premium-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover)}
+.premium-card:hover::before{opacity:1}
+.premium-card__top-glow{position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s;z-index:1}
+.premium-card:hover .premium-card__top-glow{opacity:1}
+.premium-card__content{padding:2rem;position:relative;z-index:2;flex:1;display:flex;flex-direction:column}
+.premium-card__icon{
+    width:64px;height:64px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.6rem;margin-bottom:1.2rem;
+    box-shadow:0 8px 24px rgba(231,76,60,.25);
+}
+.premium-card__title{font-family:var(--police-titres);font-size:1.3rem;color:var(--primaire);margin-bottom:.6rem}
+.premium-card__text{color:var(--text-muted);font-size:.95rem;line-height:1.6}
+.premium-card__link{margin-top:1rem;color:var(--accent);font-weight:600;font-size:.9rem;display:inline-flex;align-items:center;gap:.4rem;transition:var(--transition)}
+.premium-card__link:hover{gap:.7rem}
+
+/* ============================================
+   SIGNATURE CHIME #8 — TILT CARD 3D
+   ============================================ */
+.tilt-card{transform-style:preserve-3d;transition:transform .1s ease-out;will-change:transform}
+.tilt-card__inner{transform-style:preserve-3d;height:100%}
+.tilt-card__inner > *{transform:translateZ(40px)}
+
+/* ============================================
+   SIGNATURE CHIME #11 — BENTO GRID ASYMMETRIC
+   ============================================ */
+.bento-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.bento-grid > *:first-child{grid-column:span 2;grid-row:span 2}
+.bento-card{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.8rem;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:180px;transition:var(--transition);overflow:hidden;position:relative;
+}
+.bento-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.bento-card--accent{background:linear-gradient(135deg,var(--accent),var(--primaire));color:#fff}
+.bento-card--accent .bento-card__title{color:#fff}
+.bento-card--accent .bento-card__text{color:rgba(255,255,255,.85)}
+.bento-card__icon{font-size:2rem;margin-bottom:.6rem}
+.bento-card__title{font-family:var(--police-titres);font-size:1.2rem;color:var(--primaire);margin-bottom:.4rem}
+.bento-card__text{font-size:.9rem;color:var(--text-muted);line-height:1.5}
+
+/* ============================================
+   SIGNATURE CHIME #6 — GLASS CARD LIFESTYLE
+   ============================================ */
+.glass-section{
+    position:relative;min-height:480px;
+    display:flex;align-items:center;justify-content:center;
+    background-size:cover;background-position:center;
+    background-attachment:fixed;
+    margin:3rem 0;overflow:hidden;
+}
+.glass-section::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(26,26,26,.6),rgba(44,62,80,.5));
+}
+.glass-card{
+    position:relative;z-index:2;
+    max-width:640px;margin:2rem;padding:2.5rem;
+    background:rgba(255,255,255,.12);
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:var(--arrondi-carte);
+    color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.glass-card h2{font-family:var(--police-titres);font-size:clamp(1.5rem,3vw,2rem);margin-bottom:1rem;color:#fff}
+.glass-card p{font-size:1rem;line-height:1.7;opacity:.95;margin-bottom:1rem}
+.glass-card .btn{margin-top:.5rem}
+
+/* ============================================
+   SIGNATURE CHIME #10 — PULSE RING
+   ============================================ */
+.pulse-ring{position:relative;display:inline-flex}
+.pulse-ring::after{
+    content:'';position:absolute;inset:-4px;
+    border:2px solid var(--accent);border-radius:50%;
+    animation:pulse-ring-anim 2s ease-out infinite;
+}
+@keyframes pulse-ring-anim{
+    0%{transform:scale(1);opacity:1}
+    100%{transform:scale(1.5);opacity:0}
+}
+
+/* ============================================
+   SIGNATURE CHIME #9 — CAROUSEL AUTO-SCROLL
+   ============================================ */
+.carousel-viewport{overflow:hidden;margin:0 -1rem;padding:0 1rem}
+.carousel-track{
+    display:flex;gap:1.5rem;transition:transform .5s ease;
+    will-change:transform;
+}
+.carousel-track[data-autoscroll="true"]{
+    animation:scroll-infinite 35s linear infinite;
+}
+.carousel-track[data-autoscroll="true"]:hover{animation-play-state:paused}
+@keyframes scroll-infinite{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
+}
+.carousel-item{flex:0 0 320px;scroll-snap-align:start}
+.carousel-ctrl{
+    display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem;
+}
+.carousel-ctrl button{
+    width:44px;height:44px;border-radius:50%;
+    background:var(--fond-clair);color:var(--primaire);
+    font-size:1.1rem;transition:var(--transition);
+}
+.carousel-ctrl button:hover{background:var(--accent);color:#fff}
+
+/* ============================================
+   SIGNATURE CHIME #12 — MODAL PREMIUM
+   ============================================ */
+.modal-backdrop{
+    position:fixed;inset:0;background:rgba(26,26,26,.7);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;
+    padding:1rem;opacity:0;pointer-events:none;
+    transition:opacity var(--transition);z-index:5000;
+}
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal-premium{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    max-width:480px;width:100%;padding:2.5rem;text-align:center;
+    transform:scale(.85);opacity:0;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+    box-shadow:0 30px 80px rgba(0,0,0,.3);
+}
+.modal-backdrop.open .modal-premium{transform:scale(1);opacity:1}
+.modal-premium--error .modal-premium__icon{background:linear-gradient(135deg,#E74C3C,#8B0000)}
+.modal-premium__icon{
+    width:80px;height:80px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:2rem;margin:0 auto 1.5rem;
+    box-shadow:0 10px 30px rgba(231,76,60,.4);
+    animation:icon-pop .5s cubic-bezier(.34,1.56,.64,1) .2s backwards;
+}
+@keyframes icon-pop{
+    from{transform:scale(0)}
+    to{transform:scale(1)}
+}
+.modal-premium__title{font-family:var(--police-titres);font-size:1.6rem;color:var(--primaire);margin-bottom:.8rem}
+.modal-premium__message{color:var(--text-muted);line-height:1.6;margin-bottom:1.5rem}
+.modal-premium__actions{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+
+/* ============================================
+   HERO HOTELLERIE (avec image + booking bar)
+   ============================================ */
+.hero-hotellerie{
+    position:relative;min-height:90vh;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;overflow:hidden;
+    padding:6rem 1rem 7rem;
+}
+.hero-hotellerie__bg{
+    position:absolute;inset:0;
+    background-size:cover;background-position:center;
+    transform:scale(1.05);will-change:transform;
+    z-index:0;
+}
+.hero-hotellerie__overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(26,26,26,.7) 0%,rgba(44,62,80,.55) 100%);
+    z-index:1;
+}
+.hero-hotellerie__content{
+    position:relative;z-index:2;
+    max-width:900px;margin:0 auto;
+}
+.hero-hotellerie__badge{
+    display:inline-flex;align-items:center;gap:.5rem;
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.25);
+    padding:.5rem 1.2rem;border-radius:var(--arrondi-bouton);
+    font-size:.85rem;font-weight:500;margin-bottom:1.5rem;
+    letter-spacing:.5px;
+}
+.hero-hotellerie__title{
+    font-family:var(--police-titres);
+    font-size:clamp(2.2rem,6vw,4rem);
+    font-weight:700;line-height:1.1;margin-bottom:1rem;
+    text-shadow:0 4px 30px rgba(0,0,0,.4);
+}
+.hero-hotellerie__subtitle{
+    font-family:var(--police-signature);
+    font-size:clamp(1.1rem,2.5vw,1.4rem);
+    font-style:italic;opacity:.95;max-width:640px;margin:0 auto 2rem;
+    text-shadow:0 2px 15px rgba(0,0,0,.5);
+}
+.hero-hotellerie__cta{
+    display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;
+    margin-bottom:2rem;
+}
+.hero-hotellerie__rating{
+    display:inline-flex;align-items:center;gap:.5rem;
+    font-size:.9rem;opacity:.9;
+}
+.hero-hotellerie__rating .stars{color:var(--stars);letter-spacing:2px}
+
+/* BOOKING BAR (signature hotellerie) */
+.booking-bar{
+    position:relative;z-index:2;
+    max-width:1100px;margin:-3rem auto 0;
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.2);
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;
+    gap:1rem;align-items:end;
+}
+.booking-bar__field{
+    display:flex;flex-direction:column;gap:.4rem;
+}
+.booking-bar__field label{
+    font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--text-muted);font-weight:600;margin-bottom:0;
+}
+.booking-bar__field input,
+.booking-bar__field select{
+    padding:.7rem .9rem;font-size:.95rem;border:1.5px solid var(--fond-moyen);
+    border-radius:var(--arrondi-input);
+}
+.booking-bar__submit{
+    height:48px;padding:0 1.8rem;
+    background:var(--accent);color:#fff;
+    border-radius:var(--arrondi-bouton);font-weight:600;
+    border:none;cursor:pointer;transition:var(--transition);
+    display:inline-flex;align-items:center;gap:.4rem;
+}
+.booking-bar__submit:hover{background:var(--primaire);transform:translateY(-2px);box-shadow:0 8px 24px rgba(231,76,60,.3)}
+
+/* ============================================
+   STATS HOTELLERIE
+   ============================================ */
+.stats-grid{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.stat-hotellerie{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem 1.5rem;text-align:center;box-shadow:var(--shadow);
+    transition:var(--transition);
+}
+.stat-hotellerie:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.stat-hotellerie__icon{
+    width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.4rem;margin:0 auto 1rem;
+}
+.stat-hotellerie__nombre{
+    display:block;font-family:var(--police-titres);
+    font-size:clamp(2rem,4vw,2.6rem);font-weight:700;color:var(--primaire);
+    line-height:1;margin-bottom:.5rem;
+}
+.stat-hotellerie__label{
+    font-size:.88rem;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:.5px;font-weight:500;
+}
+
+/* ============================================
+   CHAMBRES GRID + CARDS
+   ============================================ */
+.chambres-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:2rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.chambre-card{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    overflow:hidden;box-shadow:var(--shadow);
+    transition:transform var(--transition),box-shadow var(--transition);
+    display:flex;flex-direction:column;height:100%;
+    position:relative;
+}
+.chambre-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-hover)}
+.chambre-card__image{
+    position:relative;height:240px;overflow:hidden;
+}
+.chambre-card__image img{
+    width:100%;height:100%;object-fit:cover;
+    transition:transform .6s ease;
+}
+.chambre-card:hover .chambre-card__image img{transform:scale(1.08)}
+.chambre-card__badge{
+    position:absolute;top:1rem;left:1rem;
+    background:var(--accent);color:#fff;
+    padding:.35rem .8rem;border-radius:var(--arrondi-bouton);
+    font-size:.75rem;font-weight:600;letter-spacing:.5px;
+    z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+.chambre-card__bookmark{
+    position:absolute;top:1rem;right:1rem;
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
+    border:none;cursor:pointer;z-index:2;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--primaire);font-size:1rem;
+    transition:var(--transition);
+}
+.chambre-card__bookmark:hover{background:var(--accent);color:#fff}
+.chambre-card__bookmark.is-bookmarked{background:var(--accent);color:#fff}
+.chambre-card__content{
+    padding:1.5rem;flex:1;display:flex;flex-direction:column;
+}
+.chambre-card__type{
+    font-size:.78rem;text-transform:uppercase;letter-spacing:1px;
+    color:var(--accent);font-weight:600;margin-bottom:.4rem;
+}
+.chambre-card__nom{
+    font-family:var(--police-titres);font-size:1.3rem;
+    color:var(--primaire);margin-bottom:.5rem;line-height:1.2;
+}
+.chambre-card__vue{
+    font-size:.85rem;color:var(--text-muted);margin-bottom:.8rem;
+    display:inline-flex;align-items:center;gap:.3rem;
+}
+.chambre-card__caracs{
+    display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem;
+    padding-bottom:1rem;border-bottom:1px solid var(--fond-moyen);
+}
+.chambre-card__caracs span{
+    font-size:.82rem;color:var(--text-muted);
+    display:inline-flex;align-items:center;gap:.3rem;
+}
+.chambre-card__amenities{
+    display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;
+}
+.chambre-card__amenity{
+    font-size:.75rem;padding:.25rem .6rem;
+    background:var(--fond-clair);border-radius:var(--arrondi-bouton);
+    color:var(--text-muted);
+    display:inline-flex;align-items:center;gap:.25rem;
+}
+.chambre-card__bottom{
+    margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.chambre-card__prix{
+    font-family:var(--police-titres);font-size:1.6rem;
+    color:var(--primaire);font-weight:700;line-height:1;
+}
+.chambre-card__prix small{
+    font-size:.78rem;font-weight:400;color:var(--text-muted);
+    font-family:var(--police-corps);display:block;margin-top:.2rem;
+}
+.chambre-card__btn{
+    background:var(--primaire);color:#fff;
+    padding:.65rem 1.2rem;border-radius:var(--arrondi-bouton);
+    font-weight:600;font-size:.88rem;text-decoration:none;
+    transition:var(--transition);min-height:40px;
+    display:inline-flex;align-items:center;gap:.3rem;
+}
+.chambre-card__btn:hover{background:var(--accent);transform:translateY(-2px)}
+
+/* ============================================
+   FILTRE CHAMBRES
+   ============================================ */
+.filtre-chambres{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem;box-shadow:var(--shadow);
+    max-width:var(--container-max);margin:0 auto 2rem;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;
+    gap:1rem;align-items:end;
+}
+.filtre-chambres__group{display:flex;flex-direction:column;gap:.4rem}
+.filtre-chambres__group label{
+    font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--text-muted);font-weight:600;margin-bottom:0;
+}
+.filtre-chambres__reset{
+    height:42px;padding:0 1.2rem;
+    background:var(--fond-clair);color:var(--primaire);
+    border-radius:var(--arrondi-bouton);font-weight:600;font-size:.88rem;
+    border:none;cursor:pointer;transition:var(--transition);
+    display:inline-flex;align-items:center;gap:.3rem;
+}
+.filtre-chambres__reset:hover{background:var(--fond-moyen)}
+
+/* ============================================
+   CHAMBRE HERO (detail page)
+   ============================================ */
+.chambre-hero{
+    position:relative;min-height:60vh;
+    display:flex;align-items:flex-end;
+    color:#fff;overflow:hidden;
+    padding:6rem 1rem 3rem;
+}
+.chambre-hero__bg{
+    position:absolute;inset:0;
+    background-size:cover;background-position:center;
+    z-index:0;
+}
+.chambre-hero__overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(0deg,rgba(26,26,26,.9) 0%,rgba(26,26,26,.3) 60%,rgba(26,26,26,.4) 100%);
+    z-index:1;
+}
+.chambre-hero__content{
+    position:relative;z-index:2;
+    max-width:var(--container-max);margin:0 auto;width:100%;
+}
+.chambre-hero__type{
+    display:inline-flex;align-items:center;gap:.4rem;
+    background:var(--accent);color:#fff;
+    padding:.35rem 1rem;border-radius:var(--arrondi-bouton);
+    font-size:.78rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:1rem;
+}
+.chambre-hero__title{
+    font-family:var(--police-titres);
+    font-size:clamp(2rem,5vw,3.5rem);
+    font-weight:700;line-height:1.1;margin-bottom:1rem;
+    text-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+.chambre-hero__meta{
+    display:flex;flex-wrap:wrap;gap:1.5rem;
+    font-size:.95rem;opacity:.95;
+}
+.chambre-hero__meta span{
+    display:inline-flex;align-items:center;gap:.4rem;
+}
+.chambre-hero__meta i{color:var(--accent)}
+
+/* ============================================
+   CHAMBRE GALERIE (avec thumbnails)
+   ============================================ */
+.chambre-galerie{
+    display:grid;grid-template-columns:2fr 1fr;gap:1rem;
+    margin-bottom:2rem;
+}
+.chambre-galerie__main{
+    position:relative;border-radius:var(--arrondi-carte);
+    overflow:hidden;cursor:pointer;aspect-ratio:4/3;
+    box-shadow:var(--shadow);
+}
+.chambre-galerie__main img{
+    width:100%;height:100%;object-fit:cover;
+    transition:transform .5s ease;
+}
+.chambre-galerie__main:hover img{transform:scale(1.05)}
+.chambre-galerie__thumbs{
+    display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+}
+.chambre-galerie__thumb{
+    position:relative;border-radius:var(--arrondi-bloc);
+    overflow:hidden;cursor:pointer;aspect-ratio:1/1;
+    box-shadow:var(--shadow);transition:var(--transition);
+}
+.chambre-galerie__thumb img{
+    width:100%;height:100%;object-fit:cover;
+    transition:var(--transition);
+}
+.chambre-galerie__thumb:hover{transform:translateY(-3px)}
+.chambre-galerie__thumb.is-active{
+    box-shadow:0 0 0 3px var(--accent);
+}
+
+/* ============================================
+   CHAMBRE AMENITIES
+   ============================================ */
+.chambre-amenities{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;box-shadow:var(--shadow);margin-bottom:2rem;
+}
+.chambre-amenities__title{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--primaire);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:.6rem;
+}
+.chambre-amenities__grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1rem;
+}
+.chambre-amenities__item{
+    display:flex;align-items:center;gap:.6rem;
+    padding:.8rem;background:var(--fond-clair);
+    border-radius:var(--arrondi-bloc);font-size:.9rem;
+}
+.chambre-amenities__item i{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--blanc);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;flex-shrink:0;
+}
+.chambre-amenities__item span{color:var(--text-primary);font-weight:500}
+
+/* ============================================
+   CHAMBRE TARIFS (low/high season, weekend)
+   ============================================ */
+.chambre-tarifs{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;box-shadow:var(--shadow);margin-bottom:2rem;
+}
+.chambre-tarifs__title{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--primaire);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:.6rem;
+}
+.chambre-tarifs__toggle{
+    display:inline-flex;background:var(--fond-clair);
+    border-radius:var(--arrondi-bouton);padding:.3rem;
+    margin-bottom:1.5rem;
+}
+.chambre-tarifs__toggle button{
+    padding:.5rem 1.2rem;border-radius:var(--arrondi-bouton);
+    font-weight:600;font-size:.85rem;color:var(--text-muted);
+    transition:var(--transition);
+}
+.chambre-tarifs__toggle button.is-active{
+    background:var(--accent);color:#fff;
+    box-shadow:0 4px 12px rgba(231,76,60,.3);
+}
+.chambre-tarifs__table{
+    width:100%;border-collapse:collapse;
+}
+.chambre-tarifs__table th,
+.chambre-tarifs__table td{
+    padding:1rem;text-align:left;
+    border-bottom:1px solid var(--fond-moyen);
+}
+.chambre-tarifs__table th{
+    font-family:var(--police-titres);font-size:1rem;
+    color:var(--primaire);font-weight:600;
+    background:var(--fond-clair);
+}
+.chambre-tarifs__table td{font-size:.95rem;color:var(--text-primary)}
+.chambre-tarifs__table .prix{
+    font-weight:700;color:var(--accent);
+    font-family:var(--police-titres);font-size:1.1rem;
+}
+.chambre-tarifs__note{
+    margin-top:1rem;padding:.8rem 1rem;
+    background:var(--fond-clair);border-radius:var(--arrondi-bloc);
+    font-size:.82rem;color:var(--text-muted);
+    display:flex;align-items:center;gap:.5rem;
+}
+
+/* ============================================
+   SERVICES HOTELLERIE
+   ============================================ */
+.services-grid-hotellerie{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.service-hotellerie{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;text-align:center;box-shadow:var(--shadow);
+    transition:var(--transition);height:100%;
+    display:flex;flex-direction:column;align-items:center;
+}
+.service-hotellerie:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover)}
+.service-hotellerie__icon{
+    width:72px;height:72px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.8rem;margin-bottom:1.2rem;
+    box-shadow:0 8px 24px rgba(231,76,60,.2);
+}
+.service-hotellerie__title{
+    font-family:var(--police-titres);font-size:1.2rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.service-hotellerie__text{
+    font-size:.88rem;color:var(--text-muted);line-height:1.6;
+    margin-bottom:1rem;
+}
+.service-hotellerie__horaire{
+    font-size:.78rem;color:var(--accent);font-weight:600;
+    padding:.3rem .8rem;background:var(--fond-clair);
+    border-radius:var(--arrondi-bouton);
+}
+
+/* ============================================
+   RESTAURANT HOTELLERIE
+   ============================================ */
+.restaurant-hotellerie{
+    background:var(--fond-fonce);color:#fff;
+    border-radius:var(--arrondi-carte);overflow:hidden;
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:0;margin-bottom:2rem;
+    box-shadow:var(--shadow-hover);
+}
+.restaurant-hotellerie__image{
+    min-height:400px;background-size:cover;background-position:center;
+}
+.restaurant-hotellerie__content{
+    padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:center;
+}
+.restaurant-hotellerie__badge{
+    display:inline-flex;align-items:center;gap:.4rem;
+    background:rgba(255,255,255,.1);color:var(--accent);
+    padding:.3rem 1rem;border-radius:var(--arrondi-bouton);
+    font-size:.78rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:1rem;width:fit-content;
+}
+.restaurant-hotellerie__title{
+    font-family:var(--police-titres);font-size:clamp(1.6rem,3vw,2.4rem);
+    margin-bottom:1rem;color:#fff;
+}
+.restaurant-hotellerie__text{
+    font-size:1rem;line-height:1.7;color:rgba(255,255,255,.85);margin-bottom:1.5rem;
+}
+.restaurant-hotellerie__features{
+    display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem;
+}
+.restaurant-hotellerie__feature{
+    font-size:.88rem;color:rgba(255,255,255,.9);
+    display:flex;align-items:center;gap:.5rem;
+}
+.restaurant-hotellerie__feature i{color:var(--accent);width:20px}
+
+/* ============================================
+   SPA SECTION
+   ============================================ */
+.spa-section{
+    background:linear-gradient(135deg,var(--fond-clair) 0%,var(--fond-moyen) 100%);
+    border-radius:var(--arrondi-carte);overflow:hidden;
+    display:grid;grid-template-columns:1fr 1.2fr;gap:0;
+    margin-bottom:2rem;box-shadow:var(--shadow);
+}
+.spa-section__image{
+    min-height:400px;background-size:cover;background-position:center;
+    border-radius:0;
+}
+.spa-section__content{
+    padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:center;
+}
+.spa-section__badge{
+    display:inline-flex;align-items:center;gap:.4rem;
+    background:rgba(0,0,0,.05);color:var(--accent);
+    padding:.3rem 1rem;border-radius:var(--arrondi-bouton);
+    font-size:.78rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:1rem;width:fit-content;
+}
+.spa-section__title{
+    font-family:var(--police-titres);font-size:clamp(1.6rem,3vw,2.4rem);
+    color:var(--primaire);margin-bottom:1rem;
+}
+.spa-section__text{
+    color:var(--text-muted);font-size:1rem;line-height:1.7;margin-bottom:1.5rem;
+}
+.spa-section__treatments{
+    display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem;
+}
+.spa-section__treatment{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:.8rem 1rem;background:var(--blanc);
+    border-radius:var(--arrondi-bloc);
+}
+.spa-section__treatment span:first-child{font-weight:600;color:var(--primaire)}
+.spa-section__treatment .prix{color:var(--accent);font-weight:700}
+.spa-section__form{
+    background:var(--blanc);padding:1.5rem;border-radius:var(--arrondi-bloc);
+    display:grid;grid-template-columns:1fr 1fr auto;gap:.8rem;align-items:end;
+}
+.spa-section__form label{font-size:.78rem;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:0}
+.spa-section__form input,.spa-section__form select{
+    padding:.6rem .8rem;font-size:.9rem;
+}
+.spa-section__form button{
+    height:42px;padding:0 1.5rem;background:var(--accent);color:#fff;
+    border-radius:var(--arrondi-bouton);font-weight:600;border:none;cursor:pointer;
+    transition:var(--transition);
+}
+.spa-section__form button:hover{background:var(--primaire);transform:translateY(-2px)}
+
+/* ============================================
+   PISCINE SECTION
+   ============================================ */
+.piscine-section{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2.5rem;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:1.2fr 1fr;gap:2rem;align-items:center;
+    margin-bottom:2rem;
+}
+.piscine-section__image{
+    border-radius:var(--arrondi-carte);min-height:280px;
+    background-size:cover;background-position:center;
+    box-shadow:var(--shadow);
+}
+.piscine-section__content h3{
+    font-family:var(--police-titres);font-size:1.6rem;
+    color:var(--primaire);margin-bottom:1rem;
+}
+.piscine-section__content p{
+    color:var(--text-muted);font-size:1rem;line-height:1.7;margin-bottom:1rem;
+}
+.piscine-section__horaires{
+    display:grid;grid-template-columns:1fr 1fr;gap:.6rem;
+    margin-top:1rem;
+}
+.piscine-section__horaire{
+    padding:.6rem 1rem;background:var(--fond-clair);
+    border-radius:var(--arrondi-bloc);font-size:.85rem;
+    display:flex;align-items:center;gap:.5rem;
+}
+.piscine-section__horaire i{color:var(--accent)}
+
+/* ============================================
+   EVENEMENTIEL HOTELLERIE + CONFERENCE
+   ============================================ */
+.evenementiel-hotellerie{
+    background:var(--fond-fonce);color:#fff;
+    border-radius:var(--arrondi-carte);padding:3rem 2.5rem;
+    text-align:center;margin-bottom:2rem;
+    box-shadow:var(--shadow-hover);
+}
+.evenementiel-hotellerie__title{
+    font-family:var(--police-titres);font-size:clamp(1.8rem,4vw,2.6rem);
+    margin-bottom:1rem;color:#fff;
+}
+.evenementiel-hotellerie__text{
+    color:rgba(255,255,255,.85);font-size:1.05rem;line-height:1.7;
+    max-width:640px;margin:0 auto 1.5rem;
+}
+
+.conference-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.conference-room{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    overflow:hidden;box-shadow:var(--shadow);
+    transition:var(--transition);height:100%;
+    display:flex;flex-direction:column;
+}
+.conference-room:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover)}
+.conference-room__image{
+    height:200px;background-size:cover;background-position:center;
+    position:relative;
+}
+.conference-room__badge{
+    position:absolute;top:1rem;left:1rem;
+    background:var(--accent);color:#fff;
+    padding:.35rem .8rem;border-radius:var(--arrondi-bouton);
+    font-size:.75rem;font-weight:600;
+}
+.conference-room__content{padding:1.5rem;flex:1;display:flex;flex-direction:column}
+.conference-room__title{
+    font-family:var(--police-titres);font-size:1.2rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.conference-room__capacity{
+    font-size:.85rem;color:var(--text-muted);margin-bottom:.8rem;
+    display:inline-flex;align-items:center;gap:.4rem;
+}
+.conference-room__features{
+    list-style:none;margin-bottom:1rem;flex:1;
+}
+.conference-room__features li{
+    font-size:.85rem;color:var(--text-muted);
+    padding:.3rem 0;display:flex;align-items:center;gap:.5rem;
+}
+.conference-room__features li i{color:var(--accent);width:16px}
+.conference-room__bottom{
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding-top:1rem;border-top:1px solid var(--fond-moyen);
+}
+.conference-room__price{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--primaire);font-weight:700;
+}
+.conference-room__price small{
+    font-size:.78rem;color:var(--text-muted);font-weight:400;
+    font-family:var(--police-corps);
+}
+
+/* ============================================
+   AVIS CLIENT (reviews)
+   ============================================ */
+.avis-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.avis-client{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;box-shadow:var(--shadow);
+    transition:var(--transition);height:100%;
+    display:flex;flex-direction:column;
+}
+.avis-client:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.avis-client__stars{
+    color:var(--stars);font-size:1.1rem;letter-spacing:2px;margin-bottom:.8rem;
+}
+.avis-client__text{
+    font-family:var(--police-signature);
+    font-size:1.05rem;line-height:1.7;font-style:italic;
+    color:var(--text-primary);margin-bottom:1.5rem;flex:1;
+}
+.avis-client__author{
+    display:flex;align-items:center;gap:.8rem;
+    padding-top:1rem;border-top:1px solid var(--fond-moyen);
+}
+.avis-client__avatar{
+    width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:1.1rem;flex-shrink:0;
+}
+.avis-client__name{font-weight:600;color:var(--primaire);font-size:.95rem}
+.avis-client__country{
+    font-size:.82rem;color:var(--text-muted);
+    display:inline-flex;align-items:center;gap:.3rem;
+}
+
+/* NOTE GLOBALE (overall rating badge) */
+.note-globale{
+    display:inline-flex;align-items:center;gap:1rem;
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem 2rem;box-shadow:var(--shadow);
+    margin:0 auto 2.5rem;
+}
+.note-globale__score{
+    font-family:var(--police-titres);font-size:3rem;font-weight:700;
+    color:var(--primaire);line-height:1;
+}
+.note-globale__details{display:flex;flex-direction:column;gap:.3rem}
+.note-globale__stars{color:var(--stars);font-size:1.2rem;letter-spacing:2px}
+.note-globale__count{font-size:.85rem;color:var(--text-muted)}
+
+/* ============================================
+   EQUIPE HOTELLERIE
+   ============================================ */
+.equipe-grid{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.equipe-hotellerie{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    overflow:hidden;box-shadow:var(--shadow);
+    transition:var(--transition);height:100%;
+    text-align:center;
+}
+.equipe-hotellerie:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover)}
+.equipe-hotellerie__image{
+    height:240px;background-size:cover;background-position:center top;
+    position:relative;
+}
+.equipe-hotellerie__image::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(0deg,rgba(0,0,0,.4) 0%,transparent 50%);
+}
+.equipe-hotellerie__content{padding:1.5rem}
+.equipe-hotellerie__nom{
+    font-family:var(--police-titres);font-size:1.2rem;
+    color:var(--primaire);margin-bottom:.3rem;
+}
+.equipe-hotellerie__role{
+    font-size:.82rem;text-transform:uppercase;letter-spacing:1px;
+    color:var(--accent);font-weight:600;margin-bottom:.6rem;
+}
+.equipe-hotellerie__bio{
+    font-size:.85rem;color:var(--text-muted);line-height:1.5;
+}
+
+/* ============================================
+   VALEURS HOTELLERIE
+   ============================================ */
+.valeurs-grid{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.valeurs-hotellerie{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;box-shadow:var(--shadow);
+    transition:var(--transition);text-align:center;height:100%;
+}
+.valeurs-hotellerie:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.valeurs-hotellerie__icon{
+    width:64px;height:64px;border-radius:50%;
+    background:var(--fond-clair);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;margin:0 auto 1rem;
+}
+.valeurs-hotellerie__title{
+    font-family:var(--police-titres);font-size:1.2rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.valeurs-hotellerie__text{
+    color:var(--text-muted);font-size:.9rem;line-height:1.6;
+}
+
+/* ============================================
+   ACCES HOTELLERIE
+   ============================================ */
+.acces-hotellerie{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.acces-hotellerie__card{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2rem;box-shadow:var(--shadow);
+    transition:var(--transition);text-align:center;height:100%;
+}
+.acces-hotellerie__card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.acces-hotellerie__icon{
+    width:64px;height:64px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;margin:0 auto 1rem;
+}
+.acces-hotellerie__title{
+    font-family:var(--police-titres);font-size:1.2rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.acces-hotellerie__info{color:var(--text-muted);font-size:.9rem;line-height:1.6}
+.acces-hotellerie__info strong{color:var(--primaire);font-weight:600}
+.acces-hotellerie__map{
+    margin-top:2rem;border-radius:var(--arrondi-carte);
+    overflow:hidden;box-shadow:var(--shadow);min-height:380px;
+    background:var(--fond-clair);
+}
+
+/* ============================================
+   FAQ HOTELLERIE (button + aria-expanded)
+   ============================================ */
+.faq-hotellerie{
+    max-width:760px;margin:0 auto;padding:0 var(--gutter);
+}
+.faq-hotellerie__item{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    margin-bottom:1rem;box-shadow:var(--shadow);
+    overflow:hidden;transition:var(--transition);
+}
+.faq-hotellerie__item:hover{box-shadow:var(--shadow-hover)}
+.faq-hotellerie__q{
+    width:100%;padding:1.2rem 1.5rem;
+    display:flex;justify-content:space-between;align-items:center;gap:1rem;
+    font-family:var(--police-titres);font-size:1.05rem;font-weight:600;
+    color:var(--primaire);text-align:left;background:transparent;
+    border:none;cursor:pointer;
+}
+.faq-hotellerie__q i{
+    color:var(--accent);transition:transform var(--transition);flex-shrink:0;
+}
+.faq-hotellerie__item.open .faq-hotellerie__q i{transform:rotate(180deg)}
+.faq-hotellerie__a{
+    max-height:0;overflow:hidden;
+    transition:max-height var(--transition);
+}
+.faq-hotellerie__item.open .faq-hotellerie__a{max-height:500px}
+.faq-hotellerie__a-inner{
+    padding:0 1.5rem 1.2rem;color:var(--text-muted);
+    font-size:.95rem;line-height:1.7;
+}
+
+/* ============================================
+   OFFRES SPECIALES HOTELLERIE
+   ============================================ */
+.offres-grid-hotellerie{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:1.5rem;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.offre-card-hotellerie{
+    position:relative;background:var(--blanc);
+    border-radius:var(--arrondi-carte);overflow:hidden;
+    box-shadow:var(--shadow);transition:var(--transition);
+    height:100%;display:flex;flex-direction:column;
+}
+.offre-card-hotellerie:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover)}
+.offre-card-hotellerie__image{
+    height:200px;background-size:cover;background-position:center;
+    position:relative;
+}
+.offre-card-hotellerie__content{padding:1.5rem;flex:1;display:flex;flex-direction:column}
+.offre-card-hotellerie__title{
+    font-family:var(--police-titres);font-size:1.25rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.offre-card-hotellerie__text{
+    font-size:.9rem;color:var(--text-muted);line-height:1.6;
+    margin-bottom:1rem;flex:1;
+}
+.offre-card-hotellerie__bottom{
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding-top:1rem;border-top:1px solid var(--fond-moyen);
+}
+.offre-card-hotellerie__price{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--accent);font-weight:700;
+}
+.offre-card-hotellerie__price-old{
+    font-size:.85rem;color:var(--text-muted);
+    text-decoration:line-through;margin-right:.5rem;
+}
+
+/* PROMO BADGE */
+.promo-badge{
+    position:absolute;top:1rem;right:1rem;z-index:2;
+    background:var(--accent);color:#fff;
+    padding:.4rem 1rem;border-radius:var(--arrondi-bouton);
+    font-size:.78rem;font-weight:700;letter-spacing:.5px;
+    box-shadow:0 4px 16px rgba(231,76,60,.4);
+    text-transform:uppercase;
+}
+.promo-badge--last-minute{background:#8B0000}
+.promo-badge--early{background:var(--primaire)}
+
+/* ============================================
+   CERTIFICATIONS
+   ============================================ */
+.certifications-grid{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:2rem;
+    max-width:var(--container-max);margin:0 auto;padding:2rem var(--gutter);
+}
+.certification-item{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem 2rem;box-shadow:var(--shadow);
+    text-align:center;min-width:180px;transition:var(--transition);
+}
+.certification-item:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.certification-item__icon{
+    font-size:2rem;color:var(--accent);margin-bottom:.5rem;
+}
+.certification-item__name{
+    font-family:var(--police-titres);font-size:1rem;color:var(--primaire);
+    font-weight:600;margin-bottom:.3rem;
+}
+.certification-item__org{font-size:.8rem;color:var(--text-muted)}
+
+/* ============================================
+   PARTENAIRES
+   ============================================ */
+.partenaires-grid{
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+    gap:2rem;max-width:var(--container-max);margin:0 auto;padding:2rem var(--gutter);
+}
+.partenaires-item{
+    padding:1rem 1.5rem;background:var(--blanc);border-radius:var(--arrondi-bloc);
+    box-shadow:var(--shadow);color:var(--text-muted);font-weight:600;
+    transition:var(--transition);opacity:.7;
+}
+.partenaires-item:hover{opacity:1;transform:translateY(-3px)}
+
+/* ============================================
+   HISTOIRE (a-propos)
+   ============================================ */
+.histoire-section{
+    display:grid;grid-template-columns:1fr 1fr;gap:3rem;
+    align-items:center;max-width:var(--container-max);
+    margin:0 auto;padding:0 var(--gutter);
+}
+.histoire-section__image{
+    border-radius:var(--arrondi-carte);min-height:400px;
+    background-size:cover;background-position:center;
+    box-shadow:var(--shadow-hover);
+}
+.histoire-section__content h2{
+    font-family:var(--police-titres);font-size:clamp(1.6rem,3vw,2.4rem);
+    color:var(--primaire);margin-bottom:1rem;
+}
+.histoire-section__content p{
+    color:var(--text-muted);font-size:1rem;line-height:1.7;margin-bottom:1rem;
+}
+.histoire-section__milestones{
+    display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;
+}
+.histoire-section__milestone{
+    padding:1rem;background:var(--fond-clair);
+    border-radius:var(--arrondi-bloc);
+}
+.histoire-section__milestone span:first-child{
+    display:block;font-family:var(--police-titres);font-size:1.6rem;
+    color:var(--accent);font-weight:700;
+}
+.histoire-section__milestone span:last-child{
+    font-size:.85rem;color:var(--text-muted);
+}
+
+/* ============================================
+   CONTACT FORM + INFOS
+   ============================================ */
+.contact-layout{
+    display:grid;grid-template-columns:1.5fr 1fr;gap:2rem;
+    max-width:var(--container-max);margin:0 auto;padding:0 var(--gutter);
+}
+.contact-form{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:2.5rem;box-shadow:var(--shadow);
+}
+.contact-form h2{
+    font-family:var(--police-titres);font-size:1.6rem;
+    color:var(--primaire);margin-bottom:.5rem;
+}
+.contact-form__subtitle{color:var(--text-muted);font-size:.95rem;margin-bottom:1.5rem}
+.contact-form__grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+}
+.contact-form__group{display:flex;flex-direction:column;gap:.4rem}
+.contact-form__group--full{grid-column:1/-1}
+.contact-form__honeypot{position:absolute;left:-9999px;height:0;overflow:hidden}
+.contact-form__submit{
+    width:100%;padding:1rem;background:var(--accent);color:#fff;
+    border-radius:var(--arrondi-bouton);font-weight:700;font-size:1rem;
+    border:none;cursor:pointer;transition:var(--transition);min-height:52px;
+    display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+    margin-top:1rem;
+}
+.contact-form__submit:hover{background:var(--primaire);transform:translateY(-2px);box-shadow:0 8px 24px rgba(231,76,60,.3)}
+.contact-form__hint{
+    text-align:center;font-size:.8rem;color:var(--text-muted);
+    margin-top:.8rem;
+}
+.contact-form__required{color:var(--accent)}
+
+.contact-infos{
+    display:flex;flex-direction:column;gap:1rem;
+}
+.contact-info{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem;box-shadow:var(--shadow);
+    display:flex;gap:1rem;align-items:flex-start;
+    transition:var(--transition);
+}
+.contact-info:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
+.contact-info__icon{
+    width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--primaire));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;flex-shrink:0;
+}
+.contact-info__content h3{
+    font-family:var(--police-titres);font-size:1rem;
+    color:var(--primaire);margin-bottom:.3rem;
+}
+.contact-info__content p{font-size:.9rem;color:var(--text-muted);line-height:1.5}
+.contact-info__content a{color:var(--accent)}
+
+.horaires-bloc{
+    background:var(--blanc);border-radius:var(--arrondi-carte);
+    padding:1.5rem;box-shadow:var(--shadow);
+}
+.horaires-bloc h3{
+    font-family:var(--police-titres);font-size:1.1rem;
+    color:var(--primaire);margin-bottom:.8rem;
+    display:flex;align-items:center;gap:.5rem;
+}
+.horaires-bloc ul{list-style:none}
+.horaires-bloc li{
+    display:flex;justify-content:space-between;
+    padding:.5rem 0;font-size:.9rem;
+    border-bottom:1px solid var(--fond-moyen);
+}
+.horaires-bloc li:last-child{border-bottom:none}
+.horaires-bloc li .day{color:var(--text-muted)}
+.horaires-bloc li .hours{color:var(--primaire);font-weight:600}
+
+/* ============================================
+   SCROLL INDICATOR
+   ============================================ */
+.scroll-indicator{
+    position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+    width:30px;height:50px;border:2px solid rgba(255,255,255,.6);
+    border-radius:30px;
+    display:flex;justify-content:center;padding-top:8px;
+    cursor:pointer;transition:var(--transition);
+}
+.scroll-indicator:hover{border-color:#fff}
+.scroll-indicator::before{
+    content:'';width:6px;height:14px;background:#fff;
+    border-radius:3px;animation:scroll-down 2s infinite;
+}
+@keyframes scroll-down{
+    0%,100%{transform:translateY(0);opacity:1}
+    50%{transform:translateY(14px);opacity:.3}
+}
+
+/* ============================================
+   BUG #2 (CRITIQUE) — STICKY CTA
+   Le sticky CTA ne s'affiche que sur mobile (max-width:768px)
+   Sur desktop : jamais visible (display:none par défaut)
+   ============================================ */
+.sticky-cta{
+    position:fixed;bottom:0;left:0;right:0;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border-top:1px solid var(--fond-moyen);
+    padding:.7rem 1rem;display:none;gap:.5rem;
+    align-items:center;justify-content:space-between;
+    transform:translateY(100%);transition:transform var(--transition);
+    z-index:900;
+}
+.sticky-cta.show{transform:translateY(0)}
+.sticky-cta__text{font-size:.82rem;font-weight:600;color:var(--primaire);line-height:1.3}
+.sticky-cta__btn{
+    background:var(--accent);color:#fff;border:none;
+    padding:.6rem 1.2rem;border-radius:var(--arrondi-bouton);
+    font-weight:700;cursor:pointer;font-size:.85rem;
+    transition:var(--transition);min-height:40px;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:.3rem;
+    text-decoration:none;
+}
+.sticky-cta__btn:hover{background:var(--primaire)}
+
+/* ============================================
+   FLOATING BUTTONS (WhatsApp + Telegram)
+   Sticky stacking mobile 6 fixes :
+   - .wa-float/.tg-float bottom:1.5rem sur desktop
+   - Sur mobile bottom:5rem (au-dessus du sticky CTA)
+   - .tg-float right:5rem
+   - pulse-ring sur les deux
+   - z-index:950
+   - responsive 48px sur mobile
+   ============================================ */
+.wa-float,.tg-float{
+    position:fixed;bottom:1.5rem;right:1.5rem;
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.4rem;text-decoration:none;
+    box-shadow:0 8px 24px rgba(0,0,0,.2);
+    z-index:950;transition:var(--transition);
+}
+.wa-float{background:var(--whatsapp)}
+.wa-float:hover{transform:scale(1.1);box-shadow:0 12px 30px rgba(37,211,102,.4)}
+.wa-float::before{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    border:2px solid var(--whatsapp);
+    animation:pulse-ring-anim 2s ease-out infinite;
+}
+.tg-float{background:var(--telegram);right:5rem}
+.tg-float:hover{transform:scale(1.1);box-shadow:0 12px 30px rgba(0,136,204,.4)}
+.tg-float::before{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    border:2px solid var(--telegram);
+    animation:pulse-ring-anim 2s ease-out infinite;
+}
+
+/* ============================================
+   TOAST
+   ============================================ */
+.toast{
+    position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--fond-fonce);color:#fff;
+    padding:.8rem 1.4rem;border-radius:var(--arrondi-bouton);
+    font-size:.9rem;font-weight:500;z-index:6000;
+    opacity:0;pointer-events:none;transition:var(--transition);
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+    max-width:90vw;
+}
+.toast.show,.toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast--error{background:var(--accent)}
+.toast--success{background:var(--whatsapp)}
+
+/* ============================================
+   LIGHTBOX (galerie photos)
+   ============================================ */
+.lightbox{
+    position:fixed;inset:0;background:rgba(0,0,0,.95);
+    z-index:7000;display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity var(--transition);
+    padding:1rem;
+}
+.lightbox.open{opacity:1;pointer-events:auto}
+.lightbox__img{
+    max-width:90vw;max-height:85vh;border-radius:var(--arrondi-bloc);
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.lightbox__close{
+    position:absolute;top:1.5rem;right:1.5rem;
+    width:48px;height:48px;border-radius:50%;
+    background:rgba(255,255,255,.15);color:#fff;
+    border:none;font-size:1.4rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:var(--transition);
+}
+.lightbox__close:hover{background:var(--accent)}
+.lightbox__nav{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:56px;height:56px;border-radius:50%;
+    background:rgba(255,255,255,.15);color:#fff;
+    border:none;font-size:1.6rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:var(--transition);
+}
+.lightbox__nav:hover{background:var(--accent)}
+.lightbox__prev{left:1.5rem}
+.lightbox__next{right:1.5rem}
+.lightbox__caption{
+    position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+    color:#fff;font-size:.9rem;background:rgba(0,0,0,.5);
+    padding:.5rem 1rem;border-radius:var(--arrondi-bouton);
+}
+
+/* ============================================
+   CURSOR (custom, desktop)
+   ============================================ */
+.cursor{
+    position:fixed;width:30px;height:30px;
+    border:2px solid var(--accent);border-radius:50%;
+    pointer-events:none;z-index:9999;
+    transform:translate(-50%,-50%);
+    transition:width .2s,height .2s,background .2s,border-color .2s;
+    display:none;
+}
+.cursor.hover{width:50px;height:50px;background:rgba(231,76,60,.1);border-color:var(--primaire)}
+
+/* ============================================
+   PROGRESS BAR (lecture)
+   ============================================ */
+.barre-progression{
+    position:fixed;top:0;left:0;height:3px;width:0;
+    background:linear-gradient(90deg,var(--accent),var(--primaire));
+    z-index:1100;transition:width .1s ease;
+}
+
+/* ============================================
+   MOBILE BAR (sticky bottom nav)
+   ============================================ */
+.sticky-mobile-bar{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:var(--blanc);border-top:1px solid var(--fond-moyen);
+    padding:.5rem;z-index:900;
+    box-shadow:0 -4px 20px rgba(0,0,0,.08);
+}
+.sticky-mobile-bar a{
+    flex:1;text-align:center;padding:.5rem;
+    color:var(--primaire);font-size:.78rem;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;gap:.2rem;
+}
+.sticky-mobile-bar a i{font-size:1.2rem;color:var(--accent)}
+
+/* ============================================
+   PAGE LÉGALES (politique, conditions)
+   ============================================ */
+.legal-content{
+    max-width:780px;margin:0 auto;padding:2rem var(--gutter);
+}
+.legal-content h1{
+    font-family:var(--police-titres);font-size:clamp(1.8rem,4vw,2.4rem);
+    color:var(--primaire);margin-bottom:1rem;
+}
+.legal-content h2{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--primaire);margin:2rem 0 .8rem;
+    scroll-margin-top:100px;
+}
+.legal-content h3{
+    font-size:1.1rem;color:var(--primaire);margin:1.5rem 0 .5rem;
+}
+.legal-content p{margin-bottom:1rem;color:var(--text-primary);line-height:1.7}
+.legal-content ul,.legal-content ol{margin:1rem 0 1.2rem;padding-left:1.5rem}
+.legal-content ul{list-style:disc}
+.legal-content ol{list-style:decimal}
+.legal-content li{margin-bottom:.4rem;line-height:1.6}
+.legal-content strong{color:var(--primaire);font-weight:700}
+.legal-content a{color:var(--accent);text-decoration:underline}
+
+/* ============================================
+   404 PAGE
+   ============================================ */
+.error-404{
+    min-height:70vh;display:flex;align-items:center;justify-content:center;
+    padding:3rem 1rem;text-align:center;flex-direction:column;
+}
+.error-404__code{
+    font-family:var(--police-titres);font-size:clamp(5rem,15vw,10rem);
+    color:var(--accent);line-height:1;font-weight:700;
+}
+.error-404__title{
+    font-family:var(--police-titres);font-size:clamp(1.5rem,3vw,2rem);
+    color:var(--primaire);margin:1rem 0 .5rem;
+}
+.error-404__text{color:var(--text-muted);margin-bottom:2rem;font-size:1rem;line-height:1.6;max-width:480px;margin-left:auto;margin-right:auto}
+.error-404__suggestions{
+    max-width:var(--container-max);margin:2rem auto;padding:0 var(--gutter);
+}
+.error-404__suggestions-title{
+    font-family:var(--police-titres);font-size:1.4rem;
+    color:var(--primaire);text-align:center;margin-bottom:1.5rem;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer{
+    background:var(--fond-fonce);color:#fff;
+    padding:3rem 0 0;margin-top:auto;
+}
+.footer__grid{
+    display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:2rem;
+    max-width:var(--container-max);margin:0 auto;
+    padding:0 var(--gutter) 2rem;
+}
+.footer__col h2,.footer__col h3{
+    font-family:var(--police-titres);font-size:1.1rem;
+    color:#fff;margin-bottom:1rem;
+}
+.footer__col p{font-size:.88rem;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:.5rem}
+.footer__col ul li{margin-bottom:.5rem}
+.footer__col a{
+    color:rgba(255,255,255,.7);font-size:.88rem;
+    transition:var(--transition);
+    display:inline-flex;align-items:center;gap:.4rem;
+}
+.footer__col a:hover{color:var(--accent)}
+.footer__bottom{
+    border-top:1px solid rgba(255,255,255,.1);
+    padding:1.5rem var(--gutter);text-align:center;
+    color:rgba(255,255,255,.6);font-size:.82rem;
+}
+
+/* ============================================
+   SIGNATURE CHIME #5 — MOCKUP 3D (booking preview)
+   ============================================ */
+.mockup-3d{
+    perspective:1000px;
+    display:flex;justify-content:center;padding:2rem 0;
+}
+.mockup-3d__inner{
+    transform:rotateY(-15deg) rotateX(5deg);
+    transform-style:preserve-3d;
+    transition:transform .6s ease;
+    max-width:380px;width:100%;
+    box-shadow:0 30px 80px rgba(0,0,0,.3);
+    border-radius:var(--arrondi-carte);overflow:hidden;
+}
+.mockup-3d:hover .mockup-3d__inner{transform:rotateY(0) rotateX(0)}
+.mockup-3d__screen{
+    background:var(--blanc);padding:1.5rem;
+}
+.mockup-3d__screen img{width:100%;border-radius:var(--arrondi-bloc)}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width:1024px){
+    .chambres-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .services-grid-hotellerie{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .bento-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .bento-grid > *:first-child{grid-column:span 2;grid-row:span 1}
+    .avis-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .equipe-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .valeurs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .acces-hotellerie{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .offres-grid-hotellerie{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .conference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .restaurant-hotellerie{grid-template-columns:1fr}
+    .restaurant-hotellerie__image{min-height:280px}
+    .spa-section{grid-template-columns:1fr}
+    .spa-section__image{min-height:280px}
+    .piscine-section{grid-template-columns:1fr}
+    .histoire-section{grid-template-columns:1fr}
+    .histoire-section__image{min-height:300px}
+    .booking-bar{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .booking-bar__submit{grid-column:1/-1}
+    .filtre-chambres{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .filtre-chambres__reset{grid-column:1/-1}
+    .chambre-amenities__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .chambre-galerie{grid-template-columns:1fr}
+    .chambre-galerie__thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .contact-layout{grid-template-columns:1fr}
+    .contact-form__grid{grid-template-columns:1fr 1fr}
+    .footer__grid{grid-template-columns:1fr 1fr}
+    .spa-section__form{grid-template-columns:1fr 1fr}
+    .spa-section__form button{grid-column:1/-1}
+}
+
+@media (max-width:768px){
+    :root{
+        --section-padding:3rem 0;
+        --gutter:1rem;
+    }
+    .nav__menu{
+        display:none;
+        position:fixed;top:64px;left:0;right:0;
+        background:var(--blanc);flex-direction:column;
+        padding:1rem;gap:.3rem;
+        box-shadow:0 10px 30px rgba(0,0,0,.15);
+        max-height:calc(100vh - 64px);overflow-y:auto;
+    }
+    .nav__menu.open{display:flex}
+    .nav__menu a{width:100%;padding:.8rem 1rem}
+    .nav__toggle{display:flex}
+    .nav__phone{display:none}
+    /* v5.2 (MOB-01) : brand compact sur mobile */
+    .nav__brand{font-size:1.02rem}
+    .nav{height:58px}
+
+    .hero-hotellerie{min-height:80vh;padding:4rem 1rem 6rem}
+    .hero-hotellerie__cta{flex-direction:column;align-items:stretch}
+    .hero-hotellerie__cta .btn{width:100%}
+
+    /* v5.2.1 (MOB-02) : le hero est un flex ROW → contenu et booking-bar
+       se retrouvaient CÔTE À CÔTE sur mobile (barre coupée à droite).
+       On empile verticalement et la barre prend toute la largeur. */
+    .hero-hotellerie{flex-direction:column;align-items:stretch;justify-content:flex-start}
+    .hero-hotellerie__content{width:100%}
+    .booking-bar{width:100%;grid-template-columns:1fr;margin:-1rem auto 0;padding:1rem}
+    .booking-bar__field input,
+    .booking-bar__field select{width:100%}
+    .booking-bar__submit{width:100%;justify-content:center}
+
+    .stats-grid{grid-template-columns:1fr 1fr;gap:1rem}
+    .stat-hotellerie{padding:1.5rem 1rem}
+
+    .chambres-grid{grid-template-columns:1fr;gap:1.5rem}
+    .services-grid-hotellerie{grid-template-columns:1fr}
+    .bento-grid{grid-template-columns:1fr;gap:1rem}
+    .bento-grid > *:first-child{grid-column:span 1;grid-row:span 1}
+    .avis-grid{grid-template-columns:1fr}
+    .equipe-grid{grid-template-columns:1fr 1fr;gap:1rem}
+    .valeurs-grid{grid-template-columns:1fr}
+    .acces-hotellerie{grid-template-columns:1fr}
+    .offres-grid-hotellerie{grid-template-columns:1fr}
+    .conference-grid{grid-template-columns:1fr}
+
+    .filtre-chambres{grid-template-columns:1fr 1fr;gap:.8rem;padding:1rem}
+    .filtre-chambres__reset{grid-column:1/-1}
+
+    .chambre-amenities__grid{grid-template-columns:1fr}
+    .chambre-galerie{grid-template-columns:1fr}
+    .chambre-galerie__thumbs{grid-template-columns:1fr 1fr}
+
+    .contact-layout{grid-template-columns:1fr}
+    .contact-form{padding:1.5rem}
+    .contact-form__grid{grid-template-columns:1fr}
+
+    .footer__grid{grid-template-columns:1fr 1fr;gap:1.5rem}
+
+    .section-title{font-size:1.6rem;margin-bottom:1.5rem}
+
+    /* BUG #2 : Sticky CTA visible sur mobile uniquement */
+    .sticky-cta{display:flex}
+
+    /* Sticky stacking mobile 6 fixes :
+       wa-float + tg-float bottom:5rem (au-dessus du sticky CTA) */
+    /* v5.2.2 : wa-float/tg-float supprimés — WhatsApp est désormais dans la nav */
+    .tg-float{right:4.5rem}
+
+    .note-globale{flex-direction:column;text-align:center;gap:.5rem}
+    .note-globale__score{font-size:2.5rem}
+
+    .histoire-section__milestones{grid-template-columns:1fr}
+    .restaurant-hotellerie__features{grid-template-columns:1fr}
+    .restaurant-hotellerie__content{padding:2rem 1.5rem}
+    .spa-section__content{padding:2rem 1.5rem}
+    .spa-section__form{grid-template-columns:1fr}
+    .piscine-section{padding:1.5rem}
+    .evenementiel-hotellerie{padding:2rem 1.5rem}
+
+    .cursor,.wa-float::before,.tg-float::before,.scroll-indicator,
+    .lightbox__nav,.sticky-mobile-bar{display:none!important}
+
+    /* ============================================================
+       STICKY STACKING MOBILE — Signature Chime (v5.0.18 CORR-018)
+       ============================================================
+       Pattern OBLIGATOIRE du protocole Chime : sur mobile, les cartes
+       des grids se superposent en pile sticky avec z-index croissant.
+       L'utilisateur scroll et chaque carte vient se poser sur la précédente.
+       
+       6 fixes obligatoires :
+       1. Fond OPAQUE (#ffffff)
+       2. border-radius conservé (28px)
+       3. box-shadow séparation visuelle
+       4. overflow visible sur le parent
+       5. z-index croissant 1→6
+       6. min-height:78vh (70vh sur 480px)
+       ============================================================ */
+    .chambres-grid,
+    .services-grid-hotellerie,
+    .stats-grid,
+    .bento-grid,
+    .avis-grid,
+    .valeurs-grid,
+    .equipe-grid,
+    .offres-grid-hotellerie,
+    .conference-grid{
+        display:block!important;
+        padding:0 1rem;
+        gap:0;
+        overflow:visible;
+    }
+    .chambres-grid>*,
+    .services-grid-hotellerie>*,
+    .stats-grid>*,
+    .bento-grid>*,
+    .avis-grid>*,
+    .valeurs-grid>*,
+    .equipe-grid>*,
+    .offres-grid-hotellerie>*,
+    .conference-grid>*{
+        position:sticky;
+        top:0;
+        min-height:78vh;
+        margin-bottom:16px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        padding:32px 24px;
+        z-index:1;
+        background:#ffffff;
+        border-radius:var(--arrondi-carte,28px);
+        box-shadow:0 -8px 24px rgba(0,0,0,.08);
+    }
+    .chambres-grid>*:nth-child(1),.services-grid-hotellerie>*:nth-child(1),.stats-grid>*:nth-child(1),.bento-grid>*:nth-child(1),.avis-grid>*:nth-child(1),.valeurs-grid>*:nth-child(1),.equipe-grid>*:nth-child(1),.offres-grid-hotellerie>*:nth-child(1),.conference-grid>*:nth-child(1){z-index:1}
+    .chambres-grid>*:nth-child(2),.services-grid-hotellerie>*:nth-child(2),.stats-grid>*:nth-child(2),.bento-grid>*:nth-child(2),.avis-grid>*:nth-child(2),.valeurs-grid>*:nth-child(2),.equipe-grid>*:nth-child(2),.offres-grid-hotellerie>*:nth-child(2),.conference-grid>*:nth-child(2){z-index:2}
+    .chambres-grid>*:nth-child(3),.services-grid-hotellerie>*:nth-child(3),.stats-grid>*:nth-child(3),.bento-grid>*:nth-child(3),.avis-grid>*:nth-child(3),.valeurs-grid>*:nth-child(3),.equipe-grid>*:nth-child(3),.offres-grid-hotellerie>*:nth-child(3),.conference-grid>*:nth-child(3){z-index:3}
+    .chambres-grid>*:nth-child(4),.services-grid-hotellerie>*:nth-child(4),.stats-grid>*:nth-child(4),.bento-grid>*:nth-child(4),.avis-grid>*:nth-child(4),.valeurs-grid>*:nth-child(4),.equipe-grid>*:nth-child(4),.offres-grid-hotellerie>*:nth-child(4),.conference-grid>*:nth-child(4){z-index:4}
+    .chambres-grid>*:nth-child(5),.services-grid-hotellerie>*:nth-child(5),.stats-grid>*:nth-child(5),.bento-grid>*:nth-child(5),.avis-grid>*:nth-child(5),.valeurs-grid>*:nth-child(5),.equipe-grid>*:nth-child(5),.offres-grid-hotellerie>*:nth-child(5),.conference-grid>*:nth-child(5){z-index:5}
+    .chambres-grid>*:nth-child(6),.services-grid-hotellerie>*:nth-child(6),.stats-grid>*:nth-child(6),.bento-grid>*:nth-child(6),.avis-grid>*:nth-child(6),.valeurs-grid>*:nth-child(6),.equipe-grid>*:nth-child(6),.offres-grid-hotellerie>*:nth-child(6),.conference-grid>*:nth-child(6){z-index:6}
+    .chambres-grid>*>*,.services-grid-hotellerie>*>*,.stats-grid>*>*,.bento-grid>*>*,.avis-grid>*>*,.valeurs-grid>*>*,.equipe-grid>*>*,.offres-grid-hotellerie>*>*,.conference-grid>*>*{
+        position:relative;z-index:1;
+    }
+}
+
+@media (max-width:480px){
+    .stats-grid{grid-template-columns:1fr}
+    .equipe-grid{grid-template-columns:1fr}
+    .chambre-galerie__thumbs{grid-template-columns:1fr 1fr}
+    .footer__grid{grid-template-columns:1fr}
+    .bento-card{padding:1.5rem}
+    .premium-card__content{padding:1.5rem}
+    /* Sticky stacking : min-height réduit sur très petit mobile */
+    .chambres-grid>*,.services-grid-hotellerie>*,.stats-grid>*,.bento-grid>*,.avis-grid>*,.valeurs-grid>*,.equipe-grid>*,.offres-grid-hotellerie>*,.conference-grid>*{
+        min-height:70vh;
+        padding:24px 16px;
+    }
+}
+
+/* ============================================
+   PRINT SUPPORT
+   ============================================ */
+@media print{
+    body::before,body::after{display:none!important}
+    .header,.sticky-cta,.wa-float,.tg-float,.sticky-mobile-bar,
+    .booking-bar,.scroll-indicator,.cursor,.barre-progression,
+    .toast,.lightbox{display:none!important}
+    .hero-hotellerie{min-height:auto;color:var(--primaire);padding:2rem 1rem}
+    .hero-hotellerie__bg,.hero-hotellerie__overlay{display:none}
+    .section{padding:1.5rem 0}
+    .reveal{opacity:1!important;transform:none!important}
+    a[href]:after{content:" (" attr(href) ")";font-size:.8rem;color:var(--text-muted)}
+    .btn{box-shadow:none!important;border:1px solid var(--primaire)}
+}
+
+/* ============================================
+   HIGH CONTRAST SUPPORT
+   ============================================ */
+@media (prefers-contrast:more){
+    :root{
+        --text-muted:#3a3a3a;
+        --fond-moyen:#bdbdbd;
+    }
+    .btn{border:2px solid currentColor}
+    .premium-card,.chambre-card,.service-hotellerie,.avis-client,
+    .offre-card-hotellerie,.conference-room,.equipe-hotellerie{border:2px solid var(--primaire)}
+    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+        outline:4px solid var(--accent);outline-offset:3px;
+    }
+}
+
+/* ============================================
+   RTL SUPPORT
+   ============================================ */
+html[dir="rtl"] .scroll-indicator{left:auto;right:50%;transform:translateX(50%) scaleX(-1)}
+html[dir="rtl"] .wa-float{right:auto;left:1.5rem}
+html[dir="rtl"] .tg-float{right:auto;left:5rem}
+@media (max-width:768px){
+    html[dir="rtl"] .wa-float{left:1.5rem}
+    html[dir="rtl"] .tg-float{left:4.5rem}
+}
+html[dir="rtl"] .faq-hotellerie__q{flex-direction:row-reverse}
+html[dir="rtl"] .carousel-track{flex-direction:row-reverse}
+html[dir="rtl"] .scroll-indicator::before{transform:scaleX(-1)}
+
